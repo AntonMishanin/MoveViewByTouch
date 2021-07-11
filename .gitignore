@@ -8,5 +8,5 @@
 .cxx
 local.properties
 /.idea/*
-/gradlew
+/gradlew/*
 /gradlew.bat
