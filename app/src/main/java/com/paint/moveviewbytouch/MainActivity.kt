@@ -9,13 +9,31 @@ import androidx.appcompat.app.AppCompatActivity
 
 
 /**
- * Вся логика должна быть во ViewModel or Presenter.
+ * Вся логика должна быть во ViewModel or Presenter или вынести в кастомную вью.
  */
 
 class MainActivity : AppCompatActivity() {
 
-    private var xStart = 0f
-    private var yStart = 0f
+    //Single touch event
+    private var startX = 0f
+    private var startY = 0f
+
+    //Double touch event
+    private var previousX0 = 0f
+    private var previousY0 = 0f
+    private var previousX1 = 0f
+    private var previousY1 = 0f
+
+    private var startX0 = 0f
+    private var startY0 = 0f
+    private var startX1 = 0f
+    private var startY1 = 0f
+
+    private var startWidth = 0
+    private var startHeight = 0
+
+    //Костылек, чтобы вьюшка не прыгала, когда поднимаем два пальца.
+    private var isDoubleTouch = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,13 +50,55 @@ class MainActivity : AppCompatActivity() {
         val image = findViewById<ImageView>(R.id.image)
         //Эта функция из файла ViewExtension
         image.setOnTouchListener(actionDown = { x, y ->
-            xStart = x
-            yStart = y
+            isDoubleTouch = false
+            startX = x
+            startY = y
         }, actionMove = { x, y ->
+            if(isDoubleTouch) return@setOnTouchListener
+
             val layoutParams = image.layoutParams as RelativeLayout.LayoutParams
-            layoutParams.leftMargin += (x - xStart).toInt()
-            layoutParams.topMargin += (y - yStart).toInt()
+            layoutParams.leftMargin += (x - startX).toInt()
+            layoutParams.topMargin += (y - startY).toInt()
             image.layoutParams = layoutParams
+        }, actionPointerDown = { x0, y0, x1, y1 ->
+            isDoubleTouch = true
+
+            previousX0 = x0
+            previousY0 = y0
+            previousX1 = x1
+            previousY1 = y1
+
+            startX0 = x0
+            startY0 = y0
+            startX1 = x1
+            startY1 = y1
+
+            val actionLayoutParams = image.layoutParams as RelativeLayout.LayoutParams
+            startWidth = actionLayoutParams.width
+            startHeight = actionLayoutParams.height
+        }, actionPointerMove = { x0, y0, x1, y1 ->
+            val actionLayoutParams = image.layoutParams as RelativeLayout.LayoutParams
+            if (x0 > x1) {
+                actionLayoutParams.width += (x0 - previousX0).toInt()
+                actionLayoutParams.leftMargin += (x1 - startX1).toInt() / 2
+            } else {
+                actionLayoutParams.width += +(x1 - previousX1).toInt()
+                actionLayoutParams.leftMargin += (x0 - startX0).toInt() / 2
+            }
+
+            if (y0 > y1) {
+                actionLayoutParams.height += (y0 - previousY0).toInt()
+                actionLayoutParams.topMargin += (y1 - startY1).toInt() / 2
+            } else {
+                actionLayoutParams.height += (y1 - previousY1).toInt()
+                actionLayoutParams.topMargin += (y0 - startY0).toInt() / 2
+            }
+            image.layoutParams = actionLayoutParams
+
+            previousX0 = x0
+            previousY0 = y0
+            previousX1 = x1
+            previousY1 = y1
         })
     }
 
@@ -56,12 +116,12 @@ class MainActivity : AppCompatActivity() {
         stickerView.layoutParams = layoutParams
 
         stickerView.setOnTouchListener(actionDown = { x, y ->
-            xStart = x
-            yStart = y
+            startX = x
+            startY = y
         }, actionMove = { x, y ->
             val actionLayoutParams = stickerView.layoutParams as RelativeLayout.LayoutParams
-            actionLayoutParams.leftMargin += (x - xStart).toInt()
-            actionLayoutParams.topMargin += (y - yStart).toInt()
+            actionLayoutParams.leftMargin += (x - startX).toInt()
+            actionLayoutParams.topMargin += (y - startY).toInt()
             stickerView.layoutParams = actionLayoutParams
         })
         root.addView(stickerView)
