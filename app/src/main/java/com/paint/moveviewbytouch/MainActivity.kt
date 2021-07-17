@@ -39,7 +39,15 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        initAndMoveViewByTouch()
+        //initAndMoveViewByTouch()
+
+        /**
+         * Достаточно использовать вот эти строки ниже
+         */
+        val image = findViewById<ImageView>(R.id.image)
+        TouchHandler().addOnTouchListener(image) { leftMargin, topMargin, width, height ->
+            //Вот сюда приходят актуальные значения вьюшки
+        }
 
         val addView = findViewById<Button>(R.id.add_view)
         addView.setOnClickListener { addAndMoveViewByTouch() }
@@ -54,7 +62,7 @@ class MainActivity : AppCompatActivity() {
             startX = x
             startY = y
         }, actionMove = { x, y ->
-            if(isDoubleTouch) return@setOnTouchListener
+            if (isDoubleTouch) return@setOnTouchListener
 
             val layoutParams = image.layoutParams as RelativeLayout.LayoutParams
             layoutParams.leftMargin += (x - startX).toInt()
